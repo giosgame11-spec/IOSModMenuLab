@@ -1,0 +1,60 @@
+name: iOS CI Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build iOS Simulator App
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          xcode-select -p
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Generate Xcode project
+        run: |
+          chmod +x setup.sh
+          bash setup.sh
+
+      - name: Verify Xcode Scheme
+        run: |
+          xcodebuild -list \
+            -project IOSModMenuLab.xcodeproj
+
+      - name: Build iOS Simulator App
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project IOSModMenuLab.xcodeproj \
+            -scheme IOSModMenuLab \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tee build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: IOSModMenuLab-build-log
+          path: build.log
+          if-no-files-found: warn
