@@ -5,6 +5,7 @@ options:
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
+  xcodeVersion: "15.0"
 
 targets:
   IOSModMenuLab:
